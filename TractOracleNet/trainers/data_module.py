@@ -76,12 +76,12 @@ class StreamlineDataModule(pl.LightningDataModule):
                 self.train_file), self.train_indices)
 
             self.streamline_val = Subset(StreamlineBatchDataset(
-                self.val_file), self.valid_indices)
+                self.train_file), self.valid_indices)
 
         # Assign test dataset for use in dataloader(s)
         if stage == "test":
             self.streamline_test = Subset(StreamlineBatchDataset(
-                self.test_file, noise=0.0, flip_p=0.0), self.test_indices)
+                self.train_file, noise=0.0, flip_p=0.0), self.test_indices)
 
     def train_dataloader(self):
         """ Create the dataloader for the training set
