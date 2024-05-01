@@ -91,7 +91,7 @@ With your new dataset, you can then train a model using `python TractOracleNet/t
 
 ```
 usage: transformer_train.py [-h] [--lr LR] [--n_head N_HEAD] [--n_layers N_LAYERS] [--batch_size BATCH_SIZE] [--num_workers NUM_WORKERS] [--checkpoint CHECKPOINT]
-                            path experiment id max_ep train_dataset_file val_dataset_file test_dataset_file
+                            path experiment id max_ep dataset_file
 
  Parse the arguments.
     
@@ -101,9 +101,7 @@ positional arguments:
   experiment            Name of experiment.
   id                    ID of experiment.
   max_ep                Number of epochs.
-  train_dataset_file    Training dataset.
-  val_dataset_file      Validation dataset.
-  test_dataset_file     Testing dataset.
+  dataset_file          Dataset.
 
 options:
   -h, --help            show this help message and exit

@@ -44,9 +44,7 @@ class TractOracleNetTransformerTraining():
         self.batch_size = train_dto['batch_size']
 
         # Data files
-        self.train_dataset_file = train_dto['train_dataset_file']
-        self.val_dataset_file = train_dto['val_dataset_file']
-        self.test_dataset_file = train_dto['test_dataset_file']
+        self.dataset_file = train_dto['dataset_file']
 
     def train(
         self,
@@ -69,10 +67,7 @@ class TractOracleNetTransformerTraining():
                 self.n_layers, self.lr)
 
         # Instanciate the datamodule
-        dm = StreamlineDataModule(
-            self.train_dataset_file, self.val_dataset_file,
-            self.test_dataset_file,
-            self.batch_size, self.num_workers)
+        dm = StreamlineDataModule(self.dataset_file, self.batch_size, self.num_workers)
 
         # Training
         comet_logger = CometLogger(
@@ -118,12 +113,8 @@ def add_args(parser):
                         help='ID of experiment.')
     parser.add_argument('max_ep', type=int,
                         help='Number of epochs.')
-    parser.add_argument('train_dataset_file', type=str,
+    parser.add_argument('dataset_file', type=str,
                         help='Training dataset.')
-    parser.add_argument('val_dataset_file', type=str,
-                        help='Validation dataset.')
-    parser.add_argument('test_dataset_file', type=str,
-                        help='Testing dataset.')
     parser.add_argument('--lr', type=float, default=5e-4,
                         help='Learning rate.')
     parser.add_argument('--n_head', type=int, default=4,

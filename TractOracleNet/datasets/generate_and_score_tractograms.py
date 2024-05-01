@@ -84,8 +84,9 @@ def main(args):
         scored_tractograms_directory.mkdir()
 
     # Score tractograms using tractometer, then fusing the scores of the filtered/unfiltered streamlines into a single tractogram.
+    reference = "{}/anat/{}_T1.nii.gz".format(dataset, dataset) if dataset != "fibercup" else "{}/dti/{}_fa.nii.gz".format(dataset, dataset)
     score_tractograms(
-        "{}/anat/{}_T1.nii.gz".format(dataset, dataset),            # reference
+        reference,                                                  # reference image
         tractograms_filepaths,                                      # tractograms to score
         "{}/scoring_data/scil_scoring_config.json".format(dataset), # gt_config
         "{}/tractograms/scored_tractograms/".format(dataset),       # out_dir

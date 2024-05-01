@@ -18,9 +18,7 @@ class StreamlineDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        train_file: str,
-        val_file: str,
-        test_file: str,
+        dataset_file: str,
         batch_size: int = 1024,
         num_workers: int = 20,
     ):
@@ -30,12 +28,8 @@ class StreamlineDataModule(pl.LightningDataModule):
 
         Parameters:
         -----------
-        train_file: str
-            Path to the hdf5 file containing the training set
-        val_file: str
-            Path to the hdf5 file containing the validation set
-        test_file: str
-            Path to the hdf5 file containing the test set
+        dataset_file: str
+            Path to the hdf5 file containing the dataset.
         batch_size: int, optional
             Size of the batches to use for the dataloaders
         num_workers: int, optional
@@ -43,9 +37,7 @@ class StreamlineDataModule(pl.LightningDataModule):
         """
 
         super().__init__()
-        self.train_file = train_file
-        self.val_file = val_file
-        self.test_file = test_file
+        self.dataset_file = dataset_file
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -56,7 +48,7 @@ class StreamlineDataModule(pl.LightningDataModule):
             'pin_memory': True,
         }
         
-        num_streamlines = len(StreamlineBatchDataset(self.train_file))
+        num_streamlines = len(StreamlineBatchDataset(self.dataset_file))
         self.indices = torch.arange(num_streamlines)
         self.train_indices = self.indices[:int(0.7 * num_streamlines)]
         self.valid_indices = self.indices[int(0.7 * num_streamlines):int(0.9 * num_streamlines)]
@@ -73,15 +65,15 @@ class StreamlineDataModule(pl.LightningDataModule):
         # Assign train/val datasets for use in dataloaders
         if stage == "fit":
             self.streamline_train = Subset(StreamlineBatchDataset(
-                self.train_file), self.train_indices)
+                self.dataset_file), self.train_indices)
 
             self.streamline_val = Subset(StreamlineBatchDataset(
-                self.train_file), self.valid_indices)
+                self.dataset_file), self.valid_indices)
 
         # Assign test dataset for use in dataloader(s)
         if stage == "test":
             self.streamline_test = Subset(StreamlineBatchDataset(
-                self.train_file, noise=0.0, flip_p=0.0), self.test_indices)
+                self.dataset_file, noise=0.0, flip_p=0.0), self.test_indices)
 
     def train_dataloader(self):
         """ Create the dataloader for the training set
