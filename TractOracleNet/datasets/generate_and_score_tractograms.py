@@ -3,10 +3,12 @@ import argparse
 from pathlib import Path
 from score_tractogram import score_tractograms
 
+fibercup_handle = "fibercup"
+ismrm2015_handle = "ismrm2015"
 
 def validate_input(dataset, tractogram_extension, scored_extension):
-    if dataset not in ["fibercup", "ismrm2015"]:
-        raise ValueError("Invalid dataset. Please choose either 'fibercup' or 'ismrm2015'.")
+    if dataset not in [fibercup_handle, ismrm2015_handle]:
+        raise ValueError(f"Invalid dataset. Please choose either '{fibercup_handle}' or '{ismrm2015_handle}'.")
     if tractogram_extension not in ["trk", "tck"]:
         raise ValueError("Invalid extension. Please choose either 'trk' or 'tck' for the tractogram extension.")
     if scored_extension not in ["trk", "tck"]:
@@ -61,7 +63,7 @@ def main(args):
     for algo in scil_tracking_local_algos:
         out_filename = "{}_local_{}.{}".format(dataset, algo, tractogram_extension)
         out_filepath = tractograms_directory / out_filename
-        
+
         print("Tracking with local {}".format(algo))
         scil_tracking_local(algo, dataset, out_filepath, npv=npv)
 
@@ -84,20 +86,20 @@ def main(args):
         scored_tractograms_directory.mkdir()
 
     # Score tractograms using tractometer, then fusing the scores of the filtered/unfiltered streamlines into a single tractogram.
-    reference = "{}/anat/{}_T1.nii.gz".format(dataset, dataset) if dataset != "fibercup" else "{}/dti/{}_fa.nii.gz".format(dataset, dataset)
+    reference = "{}/anat/{}_T1.nii.gz".format(dataset, dataset) if dataset != fibercup_handle else "{}/dti/{}_fa.nii.gz".format(dataset, dataset)
     score_tractograms(
         reference,                                                  # reference image
         tractograms_filepaths,                                      # tractograms to score
-        "{}/scoring_data/scil_scoring_config.json".format(dataset), # gt_config
+        "{}/scoring_data/".format(dataset), # gt_config
         "{}/tractograms/scored_tractograms/".format(dataset),       # out_dir
-        scored_extension=scored_extension
+        scored_extension=scored_extension,
+        is_ismrm=dataset==ismrm2015_handle
     )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate and score tractograms for a given dataset.")
-    parser.add_argument("dataset", type=str, default="fibercup", help="Dataset to use for generating and scoring tractograms.", choices=["fibercup", "ismrm2015"])
+    parser.add_argument("dataset", type=str, help="Dataset to use for generating and scoring tractograms.", choices=[fibercup_handle, ismrm2015_handle])
     parser.add_argument("--extension", type=str, default="tck", help="Extension to use for the generated tractograms.", choices=["trk", "tck"])
     parser.add_argument("--scored_extension", type=str, default="trk", help="Extension to use for the scored tractograms.", choices=["trk", "tck"])
     parser.add_argument("--npv", type=int, default=10, help="Number of seeds per voxel to use for tracking.")
-
     main(parser.parse_args())

@@ -41,13 +41,13 @@ def merge_with_scores(reference, bundles_dir, inv_streamlines, output):
     print(f"Saving tractogram to {output}")
     save_tractogram(main_tractogram, str(output))
 
-def score_tractograms(reference, tractograms, gt_config, out_dir, scored_extension="trk"):
+def score_tractograms(reference, tractograms, scoring_data_dir, out_dir, scored_extension="trk", is_ismrm=False):
 
     reference = Path(reference)
-    gt_config = Path(gt_config)
+    scoring_data_dir = Path(scoring_data_dir)
     out_dir = Path(out_dir)
 
-    assert gt_config.exists(), f"Ground truth config {gt_config} does not exist."
+    assert scoring_data_dir.exists(), f"Scoring data folder {scoring_data_dir} does not exist."
     assert reference.exists(), f"Reference {reference} does not exist."
 
     for tractogram in tractograms:
@@ -59,15 +59,29 @@ def score_tractograms(reference, tractograms, gt_config, out_dir, scored_extensi
 
             tmp_path = Path(tmp)
 
-            scoring_args = [
-                tractogram_path, # in_tractogram
-                gt_config, # gt_config
-                tmp_path, # out_dir
-                "--reference", reference
-            ]
-            c_proc = subprocess.run(["pwd"])
+            if is_ismrm:
+                scoring_args = [
+                    "./scil_score_ismrm_Renauld2023.sh",
+                    tractogram_path, # in_tractogram
+                    tmp_path, # out_dir
+                    scoring_data_dir, # scoring_data 
+                ]
+            else:
+                gt_config = os.path.join(scoring_data_dir, "scil_scoring_config.json")
+                if not os.path.exists(gt_config):
+                    raise FileNotFoundError(f"There should be a ground truth config file at {gt_config}, but it doesn't exist.")
+
+                scoring_args = [
+                    "scil_tractogram_segment_and_score.py",
+                    tractogram_path, # in_tractogram
+                    gt_config, # gt_config
+                    tmp_path, # out_dir
+                    "--reference", reference, # reference
+                ]
+            
+
             # Segment and score the tractogram
-            c_proc = subprocess.run(["scil_tractogram_segment_and_score.py", *scoring_args])
+            c_proc = subprocess.run([*scoring_args])
             c_proc.check_returncode() # Throws if the process failed
 
             merge_with_scores(reference, tmp_path / "segmented_VB", tmp_path / "IS.trk", out_dir / "scored_{}.{}".format(tractogram_path.stem, scored_extension))
@@ -76,17 +90,17 @@ def score_tractograms(reference, tractograms, gt_config, out_dir, scored_extensi
 if '__main__' == __name__:
 
     # Important, this script is intended to be ran from the TractOracleNet/TractOracleNet/dataset directory.
-
     parser = argparse.ArgumentParser()
     parser.add_argument('reference', type=str, help='Path to the reference streamlines file (e.g. FA map).')
-    parser.add_argument('gt_config', type=str, help='Path to the ground truth config file.')
+    parser.add_argument('scoring_data_dir', type=str, help='Path to the scoring data folder.')
     parser.add_argument('tractograms', nargs='+', type=str, help='Path to the tractogram files to score.')
     parser.add_argument('--out_dir', type=str, help='Output directory to save the scored tractograms.', default='.')
+    parser.add_argument('--is_ismrm', action='store_true', help='Flag to indicate if the dataset is ISMRM2015. If so, use the updated scoring script.', default=False)
 
     args = parser.parse_args()
     reference = args.reference
-    gt_config = args.gt_config
+    scoring_data_dir = args.scoring_data_dir
     tractograms = args.tractograms
     out_dir = args.out_dir
 
-    score_tractograms(reference, tractograms, gt_config, out_dir, scored_extension="trk")
+    score_tractograms(reference, tractograms, scoring_data_dir, out_dir, scored_extension="trk", is_ismrm=is_ismrm)
