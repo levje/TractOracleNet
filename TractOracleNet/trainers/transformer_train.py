@@ -45,6 +45,8 @@ class TractOracleNetTransformerTraining():
 
         # Data files
         self.dataset_file = train_dto['dataset_file']
+        self.comet_save_dir = train_dto['comet_save_dir']
+        self.offline = self.comet_save_dir is not None
 
     def train(
         self,
@@ -71,6 +73,8 @@ class TractOracleNetTransformerTraining():
 
         # Training
         comet_logger = CometLogger(
+            save_dir=self.comet_save_dir,
+            offline=self.offline,
             project_name="tractoracle",
             experiment_name='-'.join((self.experiment, self.id)))
 
@@ -128,6 +132,8 @@ def add_args(parser):
     parser.add_argument('--checkpoint', type=str,
                         help='Path to checkpoint. If not provided, '
                              'train from scratch.')
+    parser.add_argument('--comet_save_dir', type=str, default=None,
+                        help='Path to save comet logs. If provided, CometLogger will run in offline mode.')
 
 
 def parse_args():

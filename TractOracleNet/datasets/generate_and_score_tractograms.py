@@ -15,11 +15,12 @@ def validate_input(dataset, tractogram_extension, scored_extension):
         raise ValueError("Invalid extension. Please choose either 'trk' or 'tck'.")
 
 
-def scil_tracking_local(algo, dataset, out_filepath, npv):
+def scil_tracking_local(algo, dataset, out_filepath, npv, step):
     subprocess.run([
         "scil_tracking_local.py",
         "--algo={}".format(algo),
         "--npv={}".format(npv),
+        "--step={}".format(step),
         "{}/fodfs/{}_fodf.nii.gz".format(dataset, dataset),
         "{}/masks/{}_interface.nii.gz".format(dataset, dataset),
         "{}/masks/{}_mask_wm.nii.gz".format(dataset, dataset),
@@ -27,11 +28,12 @@ def scil_tracking_local(algo, dataset, out_filepath, npv):
     ])
 
 
-def scil_tracking_pft(algo, dataset, out_filepath, npv):
+def scil_tracking_pft(algo, dataset, out_filepath, npv, step):
     subprocess.run([
         "scil_tracking_pft.py",
         "--algo={}".format(algo),
         "--npv={}".format(npv),
+        "--step={}".format(step),
         "{}/fodfs/{}_fodf.nii.gz".format(dataset, dataset),
         "{}/masks/{}_interface.nii.gz".format(dataset, dataset),
         "{}/maps/{}_map_include.nii.gz".format(dataset, dataset),
@@ -45,10 +47,12 @@ def main(args):
     tractogram_extension = args.extension
     scored_extension = args.scored_extension
     npv = args.npv
+    step = args.step
+    out_dir_name = args.out_dir_name
 
     validate_input(dataset, tractogram_extension, scored_extension)
 
-    tractograms_directory = Path("{}/tractograms".format(dataset))
+    tractograms_directory = Path("{}/{}".format(dataset, out_dir_name))
     tractograms_filepaths = []
 
     # Make sure the directory is empty if it already exists
@@ -65,7 +69,7 @@ def main(args):
         out_filepath = tractograms_directory / out_filename
 
         print("Tracking with local {}".format(algo))
-        scil_tracking_local(algo, dataset, out_filepath, npv=npv)
+        scil_tracking_local(algo, dataset, out_filepath, npv=npv, step=step)
 
         tractograms_filepaths.append(out_filepath)
 
@@ -76,7 +80,7 @@ def main(args):
         out_filepath = tractograms_directory / out_filename
 
         print("Tracking with pft {}".format(algo))
-        scil_tracking_pft(algo, dataset, out_filepath, npv=npv)
+        scil_tracking_pft(algo, dataset, out_filepath, npv=npv, step=step)
 
         tractograms_filepaths.append(out_filepath)
 
@@ -91,7 +95,7 @@ def main(args):
         reference,                                                  # reference image
         tractograms_filepaths,                                      # tractograms to score
         "{}/scoring_data/".format(dataset), # gt_config
-        "{}/tractograms/scored_tractograms/".format(dataset),       # out_dir
+        "{}/{}/scored_tractograms/".format(dataset, out_dir_name),       # out_dir
         scored_extension=scored_extension,
         is_ismrm=dataset==ismrm2015_handle
     )
@@ -102,4 +106,6 @@ if __name__ == "__main__":
     parser.add_argument("--extension", type=str, default="tck", help="Extension to use for the generated tractograms.", choices=["trk", "tck"])
     parser.add_argument("--scored_extension", type=str, default="trk", help="Extension to use for the scored tractograms.", choices=["trk", "tck"])
     parser.add_argument("--npv", type=int, default=10, help="Number of seeds per voxel to use for tracking.")
+    parser.add_argument("--step", type=float, default=0.75, help="Step size to use for tracking.")
+    parser.add_argument("--out_dir_name", type=str, default="tractograms", help="Output directory name under <dataset>/<out_dir_name> for the generated tractograms.")
     main(parser.parse_args())
