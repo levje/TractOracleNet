@@ -48,8 +48,7 @@ class StreamlineBatchDataset(Dataset):
         self.dense = dense
         self.partial = partial
 
-        self.input_size, self.nb_points = self._compute_input_size()
-        print(f"StreamlineBatchDataset with {self.nb_points} points.")
+        self.input_size= self._compute_input_size()
 
         f = self.archives
         streamlines = f['streamlines']['data']
@@ -60,7 +59,7 @@ class StreamlineBatchDataset(Dataset):
         """
         batch = self._get_one_input()
         L, P = batch.shape
-        return L * P, P
+        return L * P
 
     @property
     def archives(self):
@@ -143,6 +142,8 @@ class StreamlineBatchDataset(Dataset):
         if np.random.random() < self.flip_p:
             streamlines = np.flip(streamlines, axis=1).copy()
 
+        _, nb_points, _ = streamlines.shape
+
         # Randomly cut the streamlines to allow the model to learn
         # how to score partial streamlines
         if self.dense:
@@ -157,7 +158,7 @@ class StreamlineBatchDataset(Dataset):
             # to use set_number_of_points
             array_seq = ArraySequence([streamlines[i, :new_lengths[i]]
                                        for i in range(len(new_lengths))])
-            streamlines = set_number_of_points(array_seq, self.nb_points)
+            streamlines = set_number_of_points(array_seq, nb_points)
             streamlines = np.asarray(streamlines)
 
         # Add noise to streamline points for robustness

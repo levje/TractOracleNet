@@ -33,7 +33,6 @@ class TractOracleNetTransformerTraining():
         self.id = train_dto['id']
         self.workspace = train_dto['workspace']
         self.project_name = train_dto['project_name']
-        self.nb_points = train_dto['nb_points']
 
         # Model parameters
         self.lr = train_dto['lr']

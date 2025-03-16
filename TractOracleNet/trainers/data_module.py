@@ -41,13 +41,15 @@ class StreamlineDataModule(pl.LightningDataModule):
         num_workers: int, optional
             Number of workers to use for the dataloaders
         """
-
         super().__init__()
         self.train_file = train_file
         self.val_file = val_file
         self.test_file = test_file
         self.batch_size = batch_size
         self.num_workers = num_workers
+
+        with h5py.File(self.train_file, "r") as f:
+            self.nb_points = f.attrs['nb_points']
 
         self.data_loader_kwargs = {
             'num_workers': self.num_workers,
@@ -59,13 +61,6 @@ class StreamlineDataModule(pl.LightningDataModule):
     def prepare_data(self):
         # pass ?
         pass
-
-    @property
-    def nb_points(self):
-        with h5py.File(self.train_file, "r") as f:
-            _nb_points = f.attrs['nb_points']
-        return _nb_points
-        
 
     def setup(self, stage: str):
 
