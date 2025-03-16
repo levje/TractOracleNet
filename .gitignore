@@ -165,5 +165,10 @@ cython_debug/
 # Datasets
 TractOracleNet/datasets/fibercup/
 TractOracleNet/datasets/ismrm2015/
+TractOracleNet/datasets/ismrm2015_1mm/
+TractOracleNet/datasets/ismrm2015_2mm/
+*.hdf5
+*.tar.gz
 data/
 experiments/
+results/
