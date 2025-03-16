@@ -31,6 +31,9 @@ class TractOracleNetTransformerTraining():
         self.experiment_path = train_dto['path']
         self.experiment = train_dto['experiment']
         self.id = train_dto['id']
+        self.workspace = train_dto['workspace']
+        self.project_name = train_dto['project_name']
+        self.nb_points = train_dto['nb_points']
 
         # Model parameters
         self.lr = train_dto['lr']
@@ -56,9 +59,17 @@ class TractOracleNetTransformerTraining():
         # Working directory
         root_dir = join(self.experiment_path, self.experiment, self.id)
 
+        # Instanciate the datamodule
+        dm = StreamlineDataModule(
+            self.train_dataset_file, self.val_dataset_file,
+            self.test_dataset_file,
+            self.batch_size, self.num_workers)
+
         # Get example input to define NN input size
         # 128 points directions -> 127 3D directions
-        self.input_size = (128-1) * 3  # Get this from datamodule ?
+        nb_points = dm.nb_points
+        print(f"Training an oracle with {nb_points} as an input.")
+        self.input_size = (dm.nb_points-1) * 3  # Get this from datamodule ?
         self.output_size = 1
 
         if self.checkpoint:
@@ -68,15 +79,10 @@ class TractOracleNetTransformerTraining():
                 self.input_size, self.output_size, self.n_head,
                 self.n_layers, self.lr)
 
-        # Instanciate the datamodule
-        dm = StreamlineDataModule(
-            self.train_dataset_file, self.val_dataset_file,
-            self.test_dataset_file,
-            self.batch_size, self.num_workers)
-
         # Training
         comet_logger = CometLogger(
-            project_name="tractoracle",
+            workspace=self.workspace,
+            project_name=self.project_name,
             experiment_name='-'.join((self.experiment, self.id)))
 
         # Log parameters
@@ -137,6 +143,10 @@ def add_args(parser):
     parser.add_argument('--checkpoint', type=str,
                         help='Path to checkpoint. If not provided, '
                              'train from scratch.')
+    parser.add_argument('--workspace', type=str, default="mrzarfir",
+                        help="Comet workspace where the project will be logged.")
+    parser.add_argument('--project_name', type=str, default="tractoracle",
+                        help="Comet project name that will be created under the workspace.")
 
 
 def parse_args():

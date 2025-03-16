@@ -1,5 +1,5 @@
 import lightning.pytorch as pl
-
+import h5py
 from torch.utils.data import (
     BatchSampler, DataLoader, SequentialSampler)
 
@@ -59,6 +59,13 @@ class StreamlineDataModule(pl.LightningDataModule):
     def prepare_data(self):
         # pass ?
         pass
+
+    @property
+    def nb_points(self):
+        with h5py.File(self.train_file, "r") as f:
+            _nb_points = f.attrs['nb_points']
+        return _nb_points
+        
 
     def setup(self, stage: str):
 

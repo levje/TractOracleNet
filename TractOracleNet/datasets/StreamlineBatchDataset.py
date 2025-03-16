@@ -47,7 +47,9 @@ class StreamlineBatchDataset(Dataset):
         self.flip_p = flip_p
         self.dense = dense
         self.partial = partial
-        self.input_size = self._compute_input_size()
+
+        self.input_size, self.nb_points = self._compute_input_size()
+        print(f"StreamlineBatchDataset with {self.nb_points} points.")
 
         f = self.archives
         streamlines = f['streamlines']['data']
@@ -58,7 +60,7 @@ class StreamlineBatchDataset(Dataset):
         """
         batch = self._get_one_input()
         L, P = batch.shape
-        return L * P
+        return L * P, P
 
     @property
     def archives(self):
@@ -155,7 +157,7 @@ class StreamlineBatchDataset(Dataset):
             # to use set_number_of_points
             array_seq = ArraySequence([streamlines[i, :new_lengths[i]]
                                        for i in range(len(new_lengths))])
-            streamlines = set_number_of_points(array_seq, 128)
+            streamlines = set_number_of_points(array_seq, self.nb_points)
             streamlines = np.asarray(streamlines)
 
         # Add noise to streamline points for robustness
